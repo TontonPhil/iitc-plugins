@@ -85,9 +85,11 @@ window.plugin.uniquesHeatmap.updateHeatmap = function(layer) {
     var portalData = p.options.ent[2]
     var uniqueInfo = null;
     
+    // modif - si le portail est "Resitant" il est considéré comme captured, car je ne peux pas le capturer
     if (portalData[18]) {
+      var team = teamStringToId(portalData[1]);
       uniqueInfo = {
-        captured: ((portalData[18] & 0b10) !== 0),
+        captured: ((portalData[18] & 0b10) !== 0) || (team === TEAM_RES),
         visited: ((portalData[18] & 0b11) !== 0)
       };
     }
