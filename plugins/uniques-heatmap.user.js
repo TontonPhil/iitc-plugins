@@ -77,12 +77,14 @@ window.plugin.uniquesHeatmap.updateHeatmap = function(layer) {
     $('#portal_highlight_select').val('Hide portals').trigger('change');
   }
 
+  console.log ("heatmap is there");
+               
   var points = [];
   for(var guid in window.portals) {
     var p = window.portals[guid];
     var portalData = p.options.ent[2]
     var uniqueInfo = null;
-    debugger;
+    
     if (portalData[18]) {
       uniqueInfo = {
         captured: ((portalData[18] & 0b10) !== 0),
