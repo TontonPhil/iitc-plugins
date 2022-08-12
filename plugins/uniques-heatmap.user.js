@@ -82,7 +82,7 @@ window.plugin.uniquesHeatmap.updateHeatmap = function(layer) {
     var p = window.portals[guid];
     var portalData = p.options.ent[2]
     var uniqueInfo = null;
-
+    debugger;
     if (portalData[18]) {
       uniqueInfo = {
         captured: ((portalData[18] & 0b10) !== 0),
