@@ -47,7 +47,7 @@ window.plugin.uniquesHeatmap = function() {};
 
 window.plugin.uniquesHeatmap.original_highlighter = window._no_highlighter;
 
-window.plugin.uniquesHeatmap.HEAT_RADIUS = 60;
+window.plugin.uniquesHeatmap.HEAT_RADIUS = 20; // initial value = 60
 window.plugin.uniquesHeatmap.HEAT_BLUR = 90;
 window.plugin.uniquesHeatmap.HEAT_MAX_ZOOM = 17;
 
