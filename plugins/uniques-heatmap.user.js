@@ -33,9 +33,9 @@ if(typeof window.plugin !== 'function') window.plugin = function() {};
 
 //PLUGIN AUTHORS: writing a plugin outside of the IITC build environment? if so, delete these lines!!
 //(leaving them in place might break the 'About IITC' page or break update checks)
-plugin_info.buildName = 'xificurk';
-plugin_info.dateTimeVersion = '20210207.174711';
-plugin_info.pluginId = 'uniques-heatmap';
+//plugin_info.buildName = 'xificurk';
+//plugin_info.dateTimeVersion = '20210207.174711';
+//plugin_info.pluginId = 'uniques-heatmap';
 //END PLUGIN AUTHORS NOTE
 
 
@@ -77,30 +77,50 @@ window.plugin.uniquesHeatmap.updateHeatmap = function(layer) {
     $('#portal_highlight_select').val('Hide portals').trigger('change');
   }
 
-  console.log ("heatmap is there");
-               
+  //  console.log ("heatmap is there");
+  
+  // c'est pas tres propre le clearLayer ici pour cette layer
+  if (window.plugin.uniquesHeatmap.no18) { window.plugin.uniquesHeatmap.no18.clearLayers() }
+
   var points = [];
   for(var guid in window.portals) {
     var p = window.portals[guid];
     var portalData = p.options.ent[2]
     var uniqueInfo = null;
+    var team = teamStringToId(portalData[1]);
     
     // modif - si le portail est "Resitant" il est considéré comme captured, car je ne peux pas le capturer
     if (portalData[18]) {
-      var team = teamStringToId(portalData[1]);
       uniqueInfo = {
-        captured: ((portalData[18] & 0b10) !== 0) || (team === TEAM_RES),
+        captured: ((portalData[18] & 0b10) !== 0),
         visited: ((portalData[18] & 0b11) !== 0)
-      };
+        };
+      } else {
+      // pour afficher tous ceux sur lesquels on n'a pas d'info
+      if (window.plugin.uniquesHeatmap.no18) {
+        window.plugin.uniquesHeatmap.no18.addLayer(L.circle(p.getLatLng(),{radius: 2 , color: "red"}))
+      }
     }
 
-    if(p._map && (!uniqueInfo || !uniqueInfo.visited || (layer === window.plugin.uniquesHeatmap.pioneerHeatLayer && !uniqueInfo.captured))) {
-      points.push(p.getLatLng());
+
+    if(p._map && (!uniqueInfo || !uniqueInfo.captured )) {
+      if (team !== TEAM_RES) {
+        points.push(p.getLatLng());
+      }
     }
   }
 
   layer.setLatLngs(points);
+  // console.log("nb de points " + points.length)
 
+  // on ajoute aussi les points dans la check heatmap
+  if (window.plugin.uniquesHeatmap.check) {
+    radius = 5 
+    window.plugin.uniquesHeatmap.check.clearLayers(); // on nettoie
+    for (const portail of points) {
+      window.plugin.uniquesHeatmap.check.addLayer(L.circle(portail,{radius: radius , color: "black"}))
+    }
+  }
 }
 
 
@@ -111,7 +131,8 @@ window.plugin.uniquesHeatmap.delayedUpdateHeatmap = function(layer, wait) {
     window.plugin.uniquesHeatmap.timer = setTimeout(function() {
       window.plugin.uniquesHeatmap.timer = undefined;
       window.plugin.uniquesHeatmap.updateHeatmap(window.plugin.uniquesHeatmap.pioneerHeatLayer);
-      window.plugin.uniquesHeatmap.updateHeatmap(window.plugin.uniquesHeatmap.explorerHeatLayer);
+  // je supprimer l'explorer heatmap des calculs pour la mise au point
+  //    window.plugin.uniquesHeatmap.updateHeatmap(window.plugin.uniquesHeatmap.explorerHeatLayer);
     }, wait * 1000);
   }
 }
@@ -145,13 +166,15 @@ L.HeatLayer=(L.Layer?L.Layer:L.Class).extend({initialize:function(t,i){this._lat
   });
   window.addLayerGroup('Pioneer heatmap', window.plugin.uniquesHeatmap.pioneerHeatLayer, false);
 
-  // Explorer heatmap
-  window.plugin.uniquesHeatmap.explorerHeatLayer = L.heatLayer([], {
-    radius: window.plugin.uniquesHeatmap.HEAT_RADIUS,
-    blur: window.plugin.uniquesHeatmap.HEAT_BLUR,
-    maxZoom: window.plugin.uniquesHeatmap.HEAT_MAX_ZOOM
-  });
-  window.addLayerGroup('Explorer heatmap', window.plugin.uniquesHeatmap.explorerHeatLayer, false);
+
+  // check map
+  // window.plugin.uniquesHeatmap.check = L.layerGroup();
+  // window.addLayerGroup('check heatmap', window.plugin.uniquesHeatmap.check,true);
+
+  // no portal[18] info 
+  // window.plugin.uniquesHeatmap.no18 = L.layerGroup();
+  // window.addLayerGroup('No [18]', window.plugin.uniquesHeatmap.no18,true);
+
 
   // Update hooks
   window.addHook('requestFinished', function() {
